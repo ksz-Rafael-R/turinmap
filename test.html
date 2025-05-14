@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Interaktive Karte</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+	#map { height: 600px; width: 100%; }
+  </style>
+</head>
+<body>
+  <h2>Meine interaktive Karte</h2>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+	var map = L.map('map').setView([45.066667, 7.7], 13); // z.B. Zürich
+	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	  attribution: '© OpenStreetMap'
+	}).addTo(map);
+	
+
+var marker = L.marker([45.066667, 7.7]).addTo(map)
+  .bindPopup(`
+    <b>Hier ist Zürich!</b><br>
+    Ein Beispieltext.<br>
+    <button>test</button><br>
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSJbFyvo2U1_JFetaukRHjdjCIsBH88UDK6ow&s" width="150">
+  `)
+  .openPopup();
+
+
+	var circle = L.circle([45.08, 7.702], {
+	  color: 'red',
+	  fillColor: '#f03',
+	  fillOpacity: 0.5,
+	  radius: 200
+	}).addTo(map).bindPopup(`
+    <b>Hier ein Bereich!</b><br>
+    Ein Beispieltext.<br>
+  `
+	);
+
+	// Eine Linie (Route)
+	var latlngs = [
+	  [45.066667, 7.7],
+	  [45.08, 7.702]
+	];
+	var polyline = L.polyline(latlngs, {color: 'blue'}).addTo(map).bindPopup("Route");
+  </script>
+</body>
+
+<script>
+
+
+</script>
+
+</html>
