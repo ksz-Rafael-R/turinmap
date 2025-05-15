@@ -29,6 +29,7 @@
     #titel {
       margin: 0;
     }
+
     #map {
       height: 600px;
       width: 100%;
@@ -140,6 +141,13 @@
                 color: entry.color || 'blue'
               }).bindPopup(popup);
               break;
+            case "polygon":
+              layer = L.polygon(entry.coords, {
+                color: entry.color || "blue",
+                fillColor: entry.fill_color || '#f03',
+                fillOpacity: entry.transparency || 0.5,
+              }).bindPopup(popup);
+              break
             default:
               console.warn("Unbekannter Typ:", entry.type);
               return;
