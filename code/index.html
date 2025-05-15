@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     #map {
-      height: 600px; 
+      height: 600px;
       width: 100%;
     }
     .popup-imgs {
@@ -27,9 +27,9 @@
     }
   </style>
 </head>
-
 <body>
   <h2>Meine interaktive Karte</h2>
+  <div class="controls" id="controls"></div>
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -38,6 +38,10 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
     }).addTo(map);
+
+    const tagStatus = {}; // Speichert den Aktivierungsstatus jeder Tag-Checkbox
+    const tagToEntries = {}; // tag -> Liste der Einträge
+    const allEntries = []; // Alle Marker-Objekte mit ihren Tags
 
     function generatePopupContent(entry) {
       let html = "";
@@ -60,42 +64,78 @@
       return html;
     }
 
+    function toggleLayer(tag) {
+      tagStatus[tag] = !tagStatus[tag];
+      updateMapVisibility();
+    }
+
+    function updateMapVisibility() {
+      allEntries.forEach(obj => {
+        // Wenn mindestens einer seiner Tags aktiv ist, soll er sichtbar sein
+        const isVisible = obj.tags.some(tag => tagStatus[tag]);
+        if (isVisible) {
+          if (!map.hasLayer(obj.layer)) {
+            obj.layer.addTo(map);
+          }
+        } else {
+          if (map.hasLayer(obj.layer)) {
+            map.removeLayer(obj.layer);
+          }
+        }
+      });
+    }
+
     fetch('data.json')
       .then(res => res.json())
       .then(entries => {
+        const controlsDiv = document.getElementById('controls');
+        const seenTags = new Set();
+
         entries.forEach(entry => {
           const popup = generatePopupContent(entry);
+          let layer;
 
+          // Ein einziges Layer-Objekt erstellen
           switch (entry.type) {
             case "marker":
-              L.marker(entry.coords)
-                .addTo(map)
-                .bindPopup(popup);
+              layer = L.marker(entry.coords).bindPopup(popup);
               break;
-
             case "circle":
-              L.circle(entry.coords, {
+              layer = L.circle(entry.coords, {
                 color: entry.color || 'red',
                 fillColor: entry.fill_color || '#f03',
                 fillOpacity: entry.transparency || 0.5,
                 radius: entry.radius || 200
-              })
-              .addTo(map)
-              .bindPopup(popup);
+              }).bindPopup(popup);
               break;
-
             case "routes":
-              L.polyline(entry.coords, {
+              layer = L.polyline(entry.coords, {
                 color: entry.color || 'blue'
-              })
-              .addTo(map)
-              .bindPopup(popup);
+              }).bindPopup(popup);
               break;
-
             default:
               console.warn("Unbekannter Typ:", entry.type);
+              return;
           }
+
+          // Speichern mit Tags
+          const tags = entry.tag || [];
+          allEntries.push({ layer, tags });
+
+          // Neue Tags sammeln
+          tags.forEach(tag => {
+            if (!seenTags.has(tag)) {
+              seenTags.add(tag);
+              tagStatus[tag] = true; // initial sichtbar
+
+              const label = document.createElement('label');
+              label.innerHTML = `<input type="checkbox" checked onchange="toggleLayer('${tag}')"> ${tag}`;
+              controlsDiv.appendChild(label);
+            }
+          });
         });
+
+        updateMapVisibility(); // Startanzeige
       });
   </script>
 </body>

@@ -1,7 +1,7 @@
 [
   {
     "type": "marker",
-    "tag": ["main"],
+    "tag": ["main", "test"],
     "coords": [45.066667, 7.7],
     "title": "Titel",
     "text": "Text",
@@ -11,7 +11,7 @@
   },
   {
     "type": "circle",
-    "tag": ["main"],
+    "tag": ["main", "jonas"],
     "coords": [45.08, 7.702],
     "radius": 500,
     "color": "red",
@@ -32,6 +32,16 @@
       [45.09, 7.69]
     ],
     "color": "green",
+    "title": "Titel",
+    "text": "Text",
+    "images": [
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_7V67TTbQsu_nMpJ_NVjiiG-A1ftTV8eLvg&s"
+    ]
+  },
+  {
+    "type": "marker",
+    "tag": ["main"],
+    "coords": [45.068567, 7.708],
     "title": "Titel",
     "text": "Text",
     "images": [
