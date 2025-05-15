@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Modulare Interaktive Karte</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map {
+      height: 600px; 
+      width: 100%;
+    }
+    .popup-imgs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 5px;
+    }
+    .popup-imgs img {
+      width: 100px;
+      border-radius: 4px;
+    }
+    .popup-buttons {
+      margin-top: 6px;
+    }
+    .popup-buttons button {
+      margin-right: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>Meine interaktive Karte</h2>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([45.066667, 7.7], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    function generatePopupContent(entry) {
+      let html = "";
+      if (entry.title) html += `<b>${entry.title}</b><br>`;
+      if (entry.text) html += `${entry.text}<br>`;
+      if (entry.images && entry.images.length) {
+        html += `<div class="popup-imgs">`;
+        entry.images.forEach(url => {
+          html += `<img src="${url}">`;
+        });
+        html += `</div>`;
+      }
+      if (entry.buttons && entry.buttons.length) {
+        html += `<div class="popup-buttons">`;
+        entry.buttons.forEach(btn => {
+          html += `<button onclick="${btn.action}">${btn.label}</button>`;
+        });
+        html += `</div>`;
+      }
+      return html;
+    }
+
+    fetch('data.json')
+      .then(res => res.json())
+      .then(entries => {
+        entries.forEach(entry => {
+          const popup = generatePopupContent(entry);
+
+          switch (entry.type) {
+            case "marker":
+              L.marker(entry.coords)
+                .addTo(map)
+                .bindPopup(popup);
+              break;
+
+            case "circle":
+              L.circle(entry.coords, {
+                color: entry.color || 'red',
+                fillColor: entry.fill_color || '#f03',
+                fillOpacity: entry.transparency || 0.5,
+                radius: entry.radius || 200
+              })
+              .addTo(map)
+              .bindPopup(popup);
+              break;
+
+            case "routes":
+              L.polyline(entry.coords, {
+                color: entry.color || 'blue'
+              })
+              .addTo(map)
+              .bindPopup(popup);
+              break;
+
+            default:
+              console.warn("Unbekannter Typ:", entry.type);
+          }
+        });
+      });
+  </script>
+</body>
+</html>
