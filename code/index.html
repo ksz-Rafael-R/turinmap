@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Interaktive Karte Turin</title>
+  <title>Arbeitswoche Turin</title>
   <meta charset="utf-8" />
+
+  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Stemma_di_Torino_%28CoA_of_Turin%29_heraldic_%282023%29.svg/309px-Stemma_di_Torino_%28CoA_of_Turin%29_heraldic_%282023%29.svg.png">
+
+  <link rel="stylesheet" href="styles.css">
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,55 +15,29 @@
 
 
   <style>
-    body {
-      margin: 0;
-      font-family: "Cuprum", sans-serif;
-      font-optical-sizing: auto;
-      font-weight: 20px;
-      font-style: normal;
-    }
-    header {
-      background: #00b300;
-      background: linear-gradient(90deg, rgba(0, 179, 0, 1) 0%, rgba(255, 255, 255, 1) 35%, rgba(255, 255, 255, 1) 65%, rgba(255, 0, 0, 1) 100%);
-      width: 100%;
-      height: 70px;
-      padding-left: 10px;
-      display: flex;
-      align-items: center;
-    }
-    #titel {
-      margin: 0;
-    }
-
-    #map {
-      height: 600px;
-      width: 100%;
-    }
-    .popup-imgs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 5px;
-    }
-    .popup-imgs img {
-      width: 100px;
-      border-radius: 4px;
-    }
-    .popup-buttons {
-      margin-top: 6px;
-    }
-    .popup-buttons button {
-      margin-right: 5px;
-    }
+    
   </style>
 </head>
-<body>
+<body class="font_cuprum">
   <header>
-    
-    <h2 id="title">Interaktive Karte Turin</h2>
+    <h1 id="title">Interaktive Karte Turin</h1>
   </header>
-  <div class="controls" id="controls"></div>
-  <div id="map"></div>
+
+  <div class="control_area">
+    <div class="checkbox-wrapper-6 controls" id="controls"></div>
+  </div>
+  
+  <div class="map_area">
+    
+    <div id="map"></div>
+    <div class="map_side">
+          
+      <div class="image_area">
+        <img class="image_large" id="image_large" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_7V67TTbQsu_nMpJ_NVjiiG-A1ftTV8eLvg&s" alt="">
+      </div>
+    </div>
+  </div>
+  
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
@@ -114,64 +93,75 @@
     }
 
     fetch('data.json')
-      .then(res => res.json())
-      .then(entries => {
-        const controlsDiv = document.getElementById('controls');
-        const seenTags = new Set();
+    .then(res => res.json())
+    .then(entries => {
+      const controlsDiv = document.getElementById('controls');
+      const seenTags = new Set();
 
-        entries.forEach(entry => {
-          const popup = generatePopupContent(entry);
-          let layer;
+      entries.forEach(entry => {
+        const popup = generatePopupContent(entry);
+        let layer;
 
-          // Ein einziges Layer-Objekt erstellen
-          switch (entry.type) {
-            case "marker":
-              layer = L.marker(entry.coords).bindPopup(popup);
-              break;
-            case "circle":
-              layer = L.circle(entry.coords, {
-                color: entry.color || 'red',
-                fillColor: entry.fill_color || '#f03',
-                fillOpacity: entry.transparency || 0.5,
-                radius: entry.radius || 200
-              }).bindPopup(popup);
-              break;
-            case "routes":
-              layer = L.polyline(entry.coords, {
-                color: entry.color || 'blue'
-              }).bindPopup(popup);
-              break;
-            case "polygon":
-              layer = L.polygon(entry.coords, {
-                color: entry.color || "blue",
-                fillColor: entry.fill_color || '#f03',
-                fillOpacity: entry.transparency || 0.5,
-              }).bindPopup(popup);
-              break
-            default:
-              console.warn("Unbekannter Typ:", entry.type);
-              return;
+        // Ein einziges Layer-Objekt erstellen
+        switch (entry.type) {
+          case "marker":
+            layer = L.marker(entry.coords).bindPopup(popup);
+            break;
+          case "circle":
+            layer = L.circle(entry.coords, {
+              color: entry.color || 'red',
+              fillColor: entry.fill_color || '#f03',
+              fillOpacity: entry.transparency || 0.5,
+              radius: entry.radius || 200
+            }).bindPopup(popup);
+            break;
+          case "routes":
+            layer = L.polyline(entry.coords, {
+              color: entry.color || 'blue'
+            }).bindPopup(popup);
+            break;
+          case "polygon":
+            layer = L.polygon(entry.coords, {
+              color: entry.color || "blue",
+              fillColor: entry.fill_color || '#f03',
+              fillOpacity: entry.transparency || 0.5,
+            }).bindPopup(popup);
+            break;
+          default:
+            console.warn("Unbekannter Typ:", entry.type);
+            return;
+        }
+
+        // Speichern mit Tags
+        const tags = entry.tag || [];
+        allEntries.push({ layer, tags });
+
+        // Neue Tags sammeln
+        tags.forEach(tag => {
+          if (!seenTags.has(tag)) {
+            seenTags.add(tag);
+            tagStatus[tag] = true; // initial sichtbar
+
+            // Checkbox-Element erzeugen
+            const labelWrapper = document.createElement("div");
+            labelWrapper.classList.add("checkbox-item");
+
+            const id = `cb-${tag.replace(/\s+/g, '-')}`; // sichere ID
+
+            labelWrapper.innerHTML = `
+              <input class="tgl tgl-light" id="${id}" type="checkbox" checked onchange="toggleLayer('${tag}')" />
+              <label class="tgl-btn" for="${id}"></label>
+              <span class="checkbox-label">${tag}</span>
+            `;
+
+            controlsDiv.appendChild(labelWrapper);
           }
-
-          // Speichern mit Tags
-          const tags = entry.tag || [];
-          allEntries.push({ layer, tags });
-
-          // Neue Tags sammeln
-          tags.forEach(tag => {
-            if (!seenTags.has(tag)) {
-              seenTags.add(tag);
-              tagStatus[tag] = true; // initial sichtbar
-
-              const label = document.createElement('label');
-              label.innerHTML = `<input type="checkbox" checked onchange="toggleLayer('${tag}')"> ${tag}`;
-              controlsDiv.appendChild(label);
-            }
-          });
         });
-
-        updateMapVisibility(); // Startanzeige
       });
+
+      updateMapVisibility(); // Startanzeige
+    });
+
   </script>
 </body>
 </html>
